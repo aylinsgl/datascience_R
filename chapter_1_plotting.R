@@ -129,7 +129,7 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy, color = drv)) +
 # creating code from image
 #1. 
 ggplot(data = mpg, aes(x = displ, y = hwy)) + 
-  geom_point() + 
+  geom_point(aes(color=displ>5)) + 
   geom_smooth(se=FALSE, color="blue", show.legend = FALSE)
 
 
@@ -153,4 +153,85 @@ ggplot(data = mpg, aes(x = displ, y = hwy)) +
   geom_point(aes(color=drv)) + 
   geom_smooth(se=FALSE, aes(linetype=drv))
 
-## up to statistical transformations :) 
+## statistical transformations 
+# bar plots. default stat for barplots is "count"
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut))
+
+# changing stat to identity (frequency in this case)
+demo <- tribble(
+  ~cut,         ~freq,
+  "Fair",       1610,
+  "Good",       4906,
+  "Very Good",  12082,
+  "Premium",    13791,
+  "Ideal",      21551
+)
+ggplot(data = demo) +
+  geom_bar(mapping = aes(x = cut, y = freq), stat = "identity")
+
+# using stat summary
+ggplot(data = diamonds) + 
+  stat_summary(
+    mapping = aes(x = cut, y = depth),
+    fun.ymin = min,
+    fun.ymax = max,
+    fun.y = median
+  )
+
+ggplot(data = diamonds) + 
+  geom_col(mapping = aes(x = cut, y=depth))
+
+# adding jitter to improve scatter plots (adds random noise for each point)
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy), position = "jitter")
+
+# see the difference between the next two plots:
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+  geom_point()
+
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+  geom_point(position="jitter", stat="identity")
+
+# using coord polar:
+bar <- ggplot(data = diamonds) + 
+  geom_bar(
+    mapping = aes(x = cut, fill = cut), 
+    show.legend = FALSE,
+    width = 1
+  ) + 
+  theme(aspect.ratio = 1) +
+  labs(x = NULL, y = NULL)
+
+bar + coord_flip()
+bar + coord_polar()
+
+# Turn a stacked bar chart into a pie chart using coord_polar() -> TAKES LONG TO COMPUTE.
+ggplot(data = mpg, aes(x=year, y=hwy, fill=drv)) + 
+  geom_bar(stat="identity")+
+  coord_polar()
+
+# What’s the difference between coord_quickmap() and coord_map()
+ggplot(data = mpg, aes(x=cyl, y=hwy, fill=drv)) + 
+  geom_bar(stat="identity")+
+  coord_map()
+ggplot(data = mpg, aes(x=cyl, y=hwy, fill=drv)) + 
+  geom_bar(stat="identity")+
+  coord_quickmap()
+
+# What does the plot below tell you about the relationship between city and highway mpg? 
+# Why is coord_fixed() important? What does geom_abline() do?
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) +
+  geom_point() + 
+  geom_abline() +
+  coord_fixed()+
+
+# lets play around more: this is the grammar of graphics
+'ggplot(data = <DATA>) + 
+  <GEOM_FUNCTION>(
+    mapping = aes(<MAPPINGS>),
+    stat = <STAT>, 
+    position = <POSITION>
+  ) +
+  <COORDINATE_FUNCTION> +
+  <FACET_FUNCTION>'
